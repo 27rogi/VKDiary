@@ -1,11 +1,11 @@
-import { Keyboard, KeyboardBuilder, VK } from 'vk-io';
-import { BaseCommand, ICommandData } from './BaseCommand';
+import { Keyboard, KeyboardBuilder } from 'vk-io';
+import { BaseCommand } from './BaseCommand';
 
 export class KeyboardCommand extends BaseCommand {
     protected keyboard: KeyboardBuilder;
-    
-    constructor(commandData: ICommandData, vk: VK) {
-        super(commandData, vk);
+
+    constructor() {
+        super();
         this.keyboard = Keyboard.builder();
     }
 

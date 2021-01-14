@@ -1,33 +1,22 @@
-import { MessageContext, VK } from 'vk-io';
+import { MessageContext } from 'vk-io';
 
 export interface ICommandData {
     command: string;
     aliases?: string[];
-    permissionLevel: Int8Array;
+    permissionLevel: number;
 }
 
 export interface IBaseCommand {
-    commandData: ICommandData;
-    vk: VK;
-
-    new(commandData: ICommandData, vk: VK): any;
-
     getCommand(): string;
     getAliases(): string[] | null;
-    getPermissionLevel(): Int8Array;
-    hasPermissionLevel(number: Int8Array): boolean;
+    getPermissionLevel(): number;
+    hasPermissionLevel(number: number): boolean;
 
-    execute(context: MessageContext, next: any): void | Promise<void>;
+    execute(context: MessageContext, args: string[], next: any): void | Promise<void>;
 }
 
 export class BaseCommand {
     protected commandData: ICommandData;
-    vk: VK;
-
-    constructor(commandData: ICommandData, vk: VK) {
-        this.vk = vk;
-        this.commandData = commandData;
-    }
 
     getCommand() {
         return this.commandData.command.toLowerCase();
@@ -44,11 +33,11 @@ export class BaseCommand {
         return this.commandData.permissionLevel;
     }
 
-    hasPermissionLevel(number: Int8Array) {
+    hasPermissionLevel(number: number) {
         return number >= this.commandData.permissionLevel;
     }
 
-    execute(context: MessageContext, next: any) {
+    execute(context: MessageContext, args: string[], next: any) {
         return;
     }
 }

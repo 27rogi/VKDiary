@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
 
 export default new mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
     homeworkId: {
         type: Number,
         required: true,
-        uniqie: true
+        unique: true
     },
     subject: {
         type: mongoose.Schema.Types.ObjectId,

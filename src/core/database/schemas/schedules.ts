@@ -1,21 +1,19 @@
 import mongoose from 'mongoose';
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export default new mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
-    scheduleId: {
+    scheduleId: Number,
+    subjectId: {
         type: Number,
         required: true,
-        uniqie: true
     },
-    subject: {
-        type: mongoose.Schema.Types.ObjectId,
+    subjectStarts: {
+        type: String,
         required: true,
-        ref: 'Subjects',
     },
-    subjectDate: {
-        type: Date,
+    subjectEnds: {
+        type: String,
         required: true,
-        default: Date.now
     },
     isEven: {
         type: Boolean,
@@ -25,4 +23,4 @@ export default new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-});
+}).plugin(AutoIncrement, {inc_field: 'scheduleId'});

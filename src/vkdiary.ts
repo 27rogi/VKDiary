@@ -1,21 +1,17 @@
-import { APIError, VK } from 'vk-io';
+import { APIError } from 'vk-io';
 import MongooseClient from './core/database/MongooseClient';
 import PluginLoader from './core/PluginLoader';
-import settings from './settings.json';
-
-export const vk = new VK({
-	token: settings.global.token
-});
+import VKClient from './core/VKClient';
 
 const pluginLoader = new PluginLoader(__dirname + '/plugins', '.js');
 
 MongooseClient.then(() => {
-    pluginLoader.load();
+	pluginLoader.load();
 }).catch((err) => {
     console.error(err);
 });
 
-vk.updates.use(async (context, next) => {
+VKClient.updates.use(async (context, next) => {
 	try {
 		await next();
 	} catch (error) {
@@ -36,4 +32,4 @@ vk.updates.use(async (context, next) => {
 	}
 });
 
-vk.updates.start().catch(console.error);
+VKClient.updates.start().catch(console.error);
