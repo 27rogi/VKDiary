@@ -9,6 +9,7 @@ import subjects from '../core/database/models/subjects';
 import subjectTimes from '../core/database/models/subjectTimes';
 import Broadcaster from '../core/utils/Broadcaster';
 import Logger from '../core/utils/Logger';
+import TimeConverter from '../core/utils/TimeConverter';
 
 export default class extends BasePlugin {
     agenda: Agenda;
@@ -38,6 +39,10 @@ export default class extends BasePlugin {
 
             this.agenda.define(jobName, async (job, done) => {
                 let subject: any = await subjects.findOne({ subjectId: schedule.subjectId }).exec();
+
+                if (schedule.isEven !== TimeConverter.isEvenWeek(moment())) {
+                    return;
+                }
 
                 const replacement: any = await replacements.findOne({
                     replacedSchedule: schedule.scheduleId,
