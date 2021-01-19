@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-export default new mongoose.Schema({
+const homeworksSchema = new mongoose.Schema({
     homeworkId: Number,
     subject: {
         type: Number,
@@ -30,4 +30,6 @@ export default new mongoose.Schema({
         type: Number,
         required: true,
     }
-}).plugin(AutoIncrement, {inc_field: 'homeworkId'});
+}).plugin(AutoIncrement, { inc_field: 'homeworkId' });
+
+export default homeworksSchema;

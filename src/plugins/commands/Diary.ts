@@ -58,13 +58,12 @@ export default class extends BaseCommand {
 
             for (const schedule of currentSchedule) {
                 let subject: any = await subjects.findOne({ subjectId: schedule.subjectId }).exec();
-                console.log(subject);
 
                 const replacement: any = await replacements.findOne({
                     replacedSchedule: schedule.scheduleId,
                     date: moment().format('DD.MM.YYYY')
                 }).exec();
-                console.log(replacement);
+
                 if (replacement !== null) {
                     subject = await subjects.findOne({subjectId: replacement.replacingSubject}).exec();
                 }

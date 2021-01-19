@@ -5,6 +5,8 @@ import { BaseCommand } from '../../core/classes/BaseCommand';
 import replacements from '../../core/database/models/replacements';
 import schedules from '../../core/database/models/schedules';
 import subjects from '../../core/database/models/subjects';
+import subjectTimes from '../../core/database/models/subjectTimes';
+import Broadcaster from '../../core/utils/Broadcaster';
 import Logger from '../../core/utils/Logger';
 
 export default class extends BaseCommand {
@@ -40,7 +42,7 @@ export default class extends BaseCommand {
                 date: date.format('DD.MM.YYYY'),
             });
 
-            replacement.save((err: MongoError) => {
+            replacement.save(async (err: MongoError, item: any) => {
                 if (err) {
                     if (err.code === 11000) {
                         return context.reply('Замена с таким айди уже существует в базе.');
@@ -48,11 +50,24 @@ export default class extends BaseCommand {
                     Logger.error(err);
                     return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                 }
+
+                const subject: any = await subjects.findOne({
+                    subjectId: item.replacingSubject
+                }).exec();
+
+                const schedule: any = await schedules.findOne({ scheduleId: item.replacedSchedule }).exec();
+                const subjectTime: any = await subjectTimes.findOne({timeId: schedule.subjectTime}).exec();
+
+                const date = moment(item.date, 'DD.MM.YYYY');
+
+                Broadcaster.broadcastMessage([
+                    `❗ На ${date.format('DD MMMM')} в ${subjectTime.timeStarts} назначена замена предметом ${subject.name}`,
+                ].join('\n'));
                 return context.reply('Замена добавлена в базу данных!');
             });
 
         } else {
-            return context.reply('Отсутствуют аргументы, используйте /добавитьзамену <намер_расписания> <номер_предмета> <дата_замены>');
+            return context.reply('Отсутствуют аргументы, используйте /добавитьзамену <номер_расписания> <номер_предмета_замены> <дата_замены>');
         }
     }
 }

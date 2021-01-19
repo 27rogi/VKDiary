@@ -36,18 +36,18 @@ export default class extends BasePlugin {
 
             const jobName = `schedule ${schedule.scheduleId}`;
 
-            const subjectTime: any = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
-            const hM = moment(subjectTime.timeStarts, 'HH:mm').subtract({minute: 5}).format('HH:mm').split(':');
-
             this.agenda.define(jobName, async (job, done) => {
                 let subject: any = await subjects.findOne({ subjectId: schedule.subjectId }).exec();
 
-                const replacement: any = await replacements.findOne({ replacedSchedule: schedule.scheduleId }).exec();
+                const replacement: any = await replacements.findOne({
+                    replacedSchedule: schedule.scheduleId,
+                    date: moment().format('DD.MM.YYYY')
+                }).exec();
                 if (replacement !== null) {
                     Logger.info(`Found replacement for #${subject.subjectId} to #${replacement.replacingSubject}`);
                     subject = await subjects.findOne({
                         subjectId: replacement.replacingSubject,
-                        date: moment(Date.now()).format('DD.MM.YYYY')
+                        date: moment().format('DD.MM.YYYY')
                     }).exec();
                 }
 
@@ -71,7 +71,10 @@ export default class extends BasePlugin {
 
             await this.agenda.start();
 
-            this.agenda.every(`*/3 * * * ${schedule.subjectDay}`, jobName);
+            const subjectTime: any = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
+            const hM = moment(subjectTime.timeStarts, 'HH:mm').subtract({minute: 5}).format('H:m').split(':');
+
+            this.agenda.every(`${hM[1]} ${hM[0]} * * ${schedule.subjectDay}`, jobName);
         }
     }
 

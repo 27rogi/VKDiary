@@ -4,6 +4,7 @@ import { MessageContext } from 'vk-io';
 import { BaseCommand } from '../../core/classes/BaseCommand';
 import homeworks from '../../core/database/models/homeworks';
 import subjects from '../../core/database/models/subjects';
+import Broadcaster from '../../core/utils/Broadcaster';
 import Logger from '../../core/utils/Logger';
 import VKClient from '../../core/VKClient';
 
@@ -62,7 +63,7 @@ export default class extends BaseCommand {
                     creatorId: context.senderId
                 });
 
-                homework.save((err: MongoError, item) => {
+                homework.save(async (err: MongoError, item: any) => {
                     if (err) {
                         if (err.code === 11000) {
                             return context.reply('Задание с таким идентификатором существует в базе, видимо это ошибка!');
@@ -70,6 +71,22 @@ export default class extends BaseCommand {
                         Logger.error(err);
                         return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                     }
+                    const subject: any = await subjects.findOne({
+                        subjectId: item.subject
+                    }).exec();
+
+                    const vkUser = (await VKClient.api.users.get({
+                        user_ids: item.creatorId,
+                    }))[0];
+
+                    Broadcaster.broadcastMessage([
+                        `💥 Добавлено новое домашнее задание!`,
+                        ``,
+                        `Предмет: ${subject.name}`,
+                        `Добавил: ${vkUser.first_name} ${vkUser.last_name}`,
+                        `Номер в базе: ${item.homeworkId}`
+                    ].join('\n'));
+
                     return context.reply('Предмет успешно добавлен в базу данных!');
                 });
 
