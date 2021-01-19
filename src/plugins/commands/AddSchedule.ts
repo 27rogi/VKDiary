@@ -3,15 +3,16 @@ import { MessageContext } from 'vk-io';
 import { BaseCommand } from '../../core/classes/BaseCommand';
 import schedules from '../../core/database/models/schedules';
 import subjects from '../../core/database/models/subjects';
-import TimeConverter from '../../core/TimeConverter';
+import Logger from '../../core/utils/Logger';
 
 
 export default class extends BaseCommand {
     constructor() {
         super();
         this.commandData = {
-            command: 'addschedule',
-            permissionLevel: 99
+            command: 'добавитьрасписание',
+            permissionLevel: 99,
+            local: true
         }
     }
 
@@ -22,11 +23,15 @@ export default class extends BaseCommand {
                 return context.reply('Предмета с таким идентификатором нет в базе данных.');
             }
 
+            if (Number(args[2]) > 7 || Number(args[3]) < 1) {
+                return context.reply('Укажите диапазон дня от 1 до 7');
+            }
+
             const schedule = new schedules({
                 subjectId: Number(args[0]),
-                subjectStarts: TimeConverter.getHMMTime(args[1]),
-                subjectEnds: TimeConverter.getHMMTime(args[2]),
-                isEven: Boolean(args[3])
+                subjectTime: Number(args[1]),
+                subjectDay: Number(args[2]),
+                isEven: (args[3] === 'true')
             });
 
             schedule.save((err: MongoError, item: any) => {
@@ -34,7 +39,7 @@ export default class extends BaseCommand {
                     if (err.code === 11000) {
                         return context.reply('Расписание с таким subjectId уже существует в базе.');
                     }
-                    console.log(err);
+                    Logger.error(err);
                     return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                 }
 
@@ -42,7 +47,7 @@ export default class extends BaseCommand {
             });
 
         } else {
-            return context.reply('Отсутствуют аргументы, используйте /addschedule <subjectId> <start> <end> <even?>');
+            return context.reply('Отсутствуют аргументы, используйте /addschedule <subjectId> <subjectTime> <day(1-7)> <even?>');
         }
     }
 }

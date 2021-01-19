@@ -1,14 +1,17 @@
+import moment from 'moment';
 import { APIError } from 'vk-io';
 import MongooseClient from './core/database/MongooseClient';
 import PluginLoader from './core/PluginLoader';
+import Logger from './core/utils/Logger';
 import VKClient from './core/VKClient';
 
 const pluginLoader = new PluginLoader(__dirname + '/plugins', '.js');
 
 MongooseClient.then(() => {
+	moment.locale('ru');
 	pluginLoader.load();
 }).catch((err) => {
-    console.error(err);
+    Logger.error(err);
 });
 
 VKClient.updates.use(async (context, next) => {
@@ -32,4 +35,6 @@ VKClient.updates.use(async (context, next) => {
 	}
 });
 
-VKClient.updates.start().catch(console.error);
+VKClient.updates.start().then(() => {
+	Logger.info('Starting to watch VK updates...');
+}).catch (Logger.error);

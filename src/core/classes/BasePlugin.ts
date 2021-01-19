@@ -7,7 +7,7 @@ export interface IPluginData {
 export interface IBasePlugin {
     data: IPluginData;
 
-    execute(): void | Promise<void>;
+    execute(): () => void | Promise<void>;
 }
 
 export class BasePlugin {

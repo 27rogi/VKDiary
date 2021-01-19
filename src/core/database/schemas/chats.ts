@@ -4,7 +4,10 @@ export default new mongoose.Schema({
     chatId: {
         type: Number,
         required: true,
-        unique: true
+    },
+    botId: {
+        type: Number,
+        required: true,
     },
     doAnnounce: {
         type: Boolean,

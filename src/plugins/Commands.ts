@@ -3,6 +3,7 @@ import { MessageContext } from 'vk-io';
 import { BaseCommand } from '../core/classes/BaseCommand';
 import { BasePlugin } from '../core/classes/BasePlugin';
 import permissions from '../core/database/models/permissions';
+import Logger from '../core/utils/Logger';
 import VKClient from '../core/VKClient';
 
 export default class extends BasePlugin {
@@ -29,15 +30,25 @@ export default class extends BasePlugin {
         }
     }
 
-    async commandMiddleware(context: MessageContext, next: any) {
-        const { messagePayload } = context;
-        context.state.command = messagePayload && messagePayload.command ? messagePayload.command : null;
+    commandMiddleware(context: MessageContext, next: any) {
+        const payload = context.messagePayload;
 
-        if (context.text === undefined)
-            return;
+        if (context.text === undefined) return;
 
-        if (!this.extractArguments(context.text)[0].startsWith('/'))
-            return;
+        if (payload === undefined) {
+            if (!this.extractArguments(context.text)[0].startsWith('/'))
+                return;
+        }
+
+        next();
+    }
+
+    async payloadMiddleware(context: MessageContext, next: any) {
+        const payload = context.messagePayload;
+
+        if (payload === undefined) return next();
+
+        context.text = '/' + payload.command;
 
         next();
     }
@@ -57,11 +68,15 @@ export default class extends BasePlugin {
 
     async execute() {
         VKClient.updates.on('message_new', this.commandMiddleware);
+        VKClient.updates.on('message_new', this.payloadMiddleware);
 
+        Logger.info(`Loading commands from "/commands" folder...`);
         const commandFiles = fs.readdirSync(__dirname + '/commands').filter((file) => file.endsWith('.js'));
 
+        Logger.info(`Attempting to load ${commandFiles.length} commands...`)
         for (const commandFile of commandFiles) {
-            import(__dirname + '/commands/' + commandFile).then((res) => {
+            await import(__dirname + '/commands/' + commandFile).then((res) => {
+                Logger.info(`Command from file ${commandFile} was registered`);
                 VKClient.updates.on('message_new', async (context: MessageContext, next: any) => {
                     const command: BaseCommand = new res.default();
 
@@ -78,10 +93,17 @@ export default class extends BasePlugin {
                         }
                     }
 
+                    if (command.isLocal()) {
+                        if (!context.isDM) {
+                            context.reply('Данная команда доступна только в личных сообщениях.');
+                            return next();
+                        }
+                    }
+
                     command.execute(context, this.extractArguments(context.text, true), next);
                 });
-            }).catch((err) => {
-                console.error(err);
+            }).catch ((err) => {
+                Logger.error(err);
             });
         }
     }

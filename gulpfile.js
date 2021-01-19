@@ -1,22 +1,21 @@
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const clean = require('gulp-clean');
-const nodemon = require("gulp-nodemon");
 
 const tsProject = ts.createProject("tsconfig.json");
 
-exports.compile = function(cb) {
+exports.compile = function() {
 	return tsProject
 		.src()
 		.pipe(tsProject())
 		.js.pipe(gulp.dest("build"));
 }; 
 
-exports.copy = function(cb) {
+exports.copy = function() {
 	return gulp.src("./src/**/*.json").pipe(gulp.dest("build"));
 };
 
-exports.clean = function (cb) {
+exports.clean = function () {
 	return gulp
 		.src("build")
 		.pipe(clean({ force: true }))

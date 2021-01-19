@@ -7,13 +7,15 @@ export default new mongoose.Schema({
         type: Number,
         required: true,
     },
-    subjectStarts: {
-        type: String,
+    subjectTime: {
+        type: Number,
         required: true,
     },
-    subjectEnds: {
-        type: String,
-        required: true,
+    subjectDay: {
+        type: Number,
+        min: 1,
+        max: 7,
+        required: true
     },
     isEven: {
         type: Boolean,

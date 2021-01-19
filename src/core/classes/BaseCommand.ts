@@ -4,6 +4,7 @@ export interface ICommandData {
     command: string;
     aliases?: string[];
     permissionLevel: number;
+    local?: boolean;
 }
 
 export interface IBaseCommand {
@@ -27,6 +28,10 @@ export class BaseCommand {
             return this.commandData.aliases
         } else
             return null;
+    }
+
+    isLocal() {
+        return this.commandData.local;
     }
 
     getPermissionLevel() {

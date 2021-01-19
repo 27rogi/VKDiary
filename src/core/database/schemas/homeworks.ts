@@ -1,34 +1,24 @@
 import mongoose from 'mongoose';
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export default new mongoose.Schema({
-    homeworkId: {
+    homeworkId: Number,
+    subject: {
         type: Number,
         required: true,
-        unique: true
-    },
-    subject: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Subjects',
     },
     target: {
         description: {
             type: String,
             required: true,
         },
-        files: {
-            photos: {
-                type: [String],
-                required: false,
-            },
-            documents: {
-                type: [String],
-                required: false,
-            }
+        attachments: {
+            type: String,
+            required: false,
         }
     },
-    expiresAt: {
-        type: Date,
+    deadline: {
+        type: String,
         required: true,
     },
     createdAt: {
@@ -40,4 +30,4 @@ export default new mongoose.Schema({
         type: Number,
         required: true,
     }
-});
+}).plugin(AutoIncrement, {inc_field: 'homeworkId'});

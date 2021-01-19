@@ -1,24 +1,18 @@
 import mongoose from 'mongoose';
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export default new mongoose.Schema({
-    replacementId: {
+    replacementId: Number,
+    replacedSchedule: {
         type: Number,
         required: true,
-        unique: true
-    },
-    replacedSubject: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'Subjects',
     },
     replacingSubject: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         required: true,
-        ref: 'Subjects',
     },
     date: {
-        type: Date,
+        type: String,
         required: true,
-        default: Date.now
     }
-});
+}).plugin(AutoIncrement, {inc_field: 'replacementId'});;
