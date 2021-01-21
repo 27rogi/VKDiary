@@ -54,7 +54,9 @@ export default class extends BaseCommand {
                     Logger.error(err);
                     return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                 }
-await new Schedules().reload();
+
+                await new Schedules().reload();
+
                 const subject = (await item.populate('payload.subject').execPopulate()).payload.subject;
                 const schedule = (await item.populate('payload.schedule').execPopulate()).payload.schedule;
                 const subjectTime = await subjectTimes.findOne({timeId: schedule.subjectTime}).exec();

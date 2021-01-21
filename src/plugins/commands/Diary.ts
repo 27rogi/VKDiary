@@ -29,7 +29,7 @@ export default class extends BaseCommand {
                 dayOfMonth = Number(args[0]);
             }
 
-        let weekDay = moment(dayOfMonth, 'DD').day();
+            let weekDay = moment(dayOfMonth, 'DD').day();
             let month;
 
             if (args[1]) {
@@ -61,11 +61,10 @@ export default class extends BaseCommand {
 
                 const replacement = await replacements.findOne({
                     replacedSchedule: schedule.scheduleId,
-                    date: moment().format('DD.MM.YYYY')
+                    date: moment(dayOfMonth + ' ' + month, 'DD MM').format('DD.MM.YYYY')
                 }).exec();
 
                 if (replacement !== null) {
-                    console.log(replacement);
                     subject = await subjects.findOne({ subjectId: replacement.replacingSubject }).exec();
                     if (replacement.teacher) subject.teacher = replacement.teacher;
                     if (replacement.location) subject.location = replacement.location;

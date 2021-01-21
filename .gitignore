@@ -111,3 +111,4 @@ yarn.lock
 build/
 
 src/settings.json
+src/settings.prod.json
