@@ -1,30 +1,37 @@
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const clean = require('gulp-clean');
+const nodemon = require('gulp-nodemon');
 
 const tsProject = ts.createProject("tsconfig.json");
 
-exports.compile = function() {
+gulp.task('compile', () => {
 	return tsProject
 		.src()
 		.pipe(tsProject())
 		.js.pipe(gulp.dest("build"));
-}; 
+}); 
 
-exports.copy = function() {
+gulp.task('copy', () => {
 	return gulp.src("./src/**/*.json").pipe(gulp.dest("build"));
-};
-
-exports.clean = function () {
+}); 
+ 
+gulp.task('clean', () => {
 	return gulp
 		.src("build")
-		.pipe(clean({ force: true }))
-}
+		.pipe(clean({ read: false }))
+})
 
-exports.build = async function () {
-	gulp.series("compile", "copy")
-};
+gulp.task('build', gulp.series("clean", "compile", "copy"));
 
-exports.watch = function () {
-	gulp.watch("src/**/*", gulp.series("clean", "copy", "compile"))
-};
+gulp.task('start', (done) => {
+		nodemon({
+			script: 'build/vkdiary.js',
+			ext: 'js',
+			done: done
+		})
+});
+
+gulp.task('serve', () => {
+	gulp.watch('src/**/*', { ignoreInitial: false }, gulp.series('build'));
+})
