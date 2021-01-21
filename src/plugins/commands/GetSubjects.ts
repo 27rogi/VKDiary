@@ -60,7 +60,7 @@ export default class extends BaseCommand {
             });
         }
 
-        subjectList.forEach((item: any) => {
+        subjectList.forEach((item) => {
             if (item.name.length > 40) {
                 item.name = item.name.substring(0, 39) + '…';
             }

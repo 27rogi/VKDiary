@@ -14,7 +14,7 @@ MongooseClient.then(() => {
     Logger.error(err);
 });
 
-VKClient.updates.use(async (context, next) => {
+VKClient.updates.use(async (context, next: any) => {
 	try {
 		await next();
 	} catch (error) {

@@ -86,7 +86,7 @@ export default class extends BasePlugin {
                     // If command has permissionLevel lower than 1 we won't be checking it
                     // to reduce load on the database, because 0 should be number for lowest access.
                     if (command.getPermissionLevel() > 0) {
-                        const user: any = await permissions.findOne({ userId: context.senderId }, 'permissionLevel').exec();
+                        const user = await permissions.findOne({ userId: context.senderId.toString() }, 'permissionLevel').exec();
                         if (user === null || !command.hasPermissionLevel(user.permissionLevel)) {
                             context.reply('У вас недостаточно прав для вызова данной команды!');
                             return next();
@@ -99,7 +99,7 @@ export default class extends BasePlugin {
                             return next();
                         }
                     }
-
+ 
                     command.execute(context, this.extractArguments(context.text, true), next);
                 });
             }).catch ((err) => {

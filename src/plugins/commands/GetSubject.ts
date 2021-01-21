@@ -12,8 +12,6 @@ export default class extends BaseCommand {
     }
 
     async execute(context: MessageContext, args: string[], next: any) {
-        context.send({
-            message: `sex`,
-        })
+
     }
 }

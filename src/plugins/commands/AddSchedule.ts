@@ -4,6 +4,7 @@ import { BaseCommand } from '../../core/classes/BaseCommand';
 import schedules from '../../core/database/models/schedules';
 import subjects from '../../core/database/models/subjects';
 import Logger from '../../core/utils/Logger';
+import Schedules from '../Schedules';
 
 
 export default class extends BaseCommand {
@@ -19,7 +20,7 @@ export default class extends BaseCommand {
     async execute(context: MessageContext, args: string[], next: any) {
         if (args.length > 3) {
 
-            if (!(await subjects.findOne({ subjectId: args[0] }).exec())) {
+            if (!(await subjects.findOne({ subjectId: Number(args[0]) }).exec())) {
                 return context.reply('Предмета с таким идентификатором нет в базе данных.');
             }
 
@@ -34,7 +35,7 @@ export default class extends BaseCommand {
                 isEven: (args[3] === 'true')
             });
 
-            schedule.save((err: MongoError, item: any) => {
+            schedule.save(async (err: MongoError, item) => {
                 if (err) {
                     if (err.code === 11000) {
                         return context.reply('Расписание с таким subjectId уже существует в базе.');
@@ -42,6 +43,8 @@ export default class extends BaseCommand {
                     Logger.error(err);
                     return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                 }
+
+                await new Schedules().reload();
 
                 return context.reply('Предмет успешно добавлен в базу данных!');
             });

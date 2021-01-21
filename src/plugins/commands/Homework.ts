@@ -2,11 +2,12 @@ import moment from 'moment';
 import { MongoError } from 'mongodb';
 import { MessageContext } from 'vk-io';
 import { BaseCommand } from '../../core/classes/BaseCommand';
-import homeworks from '../../core/database/models/homeworks';
+import homeworks, { IHomeworks } from '../../core/database/models/homeworks';
 import subjects from '../../core/database/models/subjects';
 import Broadcaster from '../../core/utils/Broadcaster';
 import Logger from '../../core/utils/Logger';
 import VKClient from '../../core/VKClient';
+import Schedules from '../Schedules';
 
 export default class extends BaseCommand {
     constructor() {
@@ -19,12 +20,11 @@ export default class extends BaseCommand {
         }
     }
 
-
     async execute(context: MessageContext, args: string[], next: any) {
 
         if (args[0] === 'добавить') {
             if (args.length > 3 && !Number.isNaN(Number(args[1]))) {
-                const subject = await subjects.findOne({ subjectId: args[1] }).exec();
+                const subject = await subjects.findOne({ subjectId: Number(args[1]) }).exec();
 
                 const homeworkDeadline = moment(args[2], 'DD.MM.YYYY');
                 if (Number.isNaN(homeworkDeadline.date())) {
@@ -63,7 +63,7 @@ export default class extends BaseCommand {
                     creatorId: context.senderId
                 });
 
-                homework.save(async (err: MongoError, item: any) => {
+                homework.save(async (err: MongoError, item) => {
                     if (err) {
                         if (err.code === 11000) {
                             return context.reply('Задание с таким идентификатором существует в базе, видимо это ошибка!');
@@ -71,13 +71,15 @@ export default class extends BaseCommand {
                         Logger.error(err);
                         return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                     }
-                    const subject: any = await subjects.findOne({
+                    const subject = await subjects.findOne({
                         subjectId: item.subject
                     }).exec();
 
                     const vkUser = (await VKClient.api.users.get({
-                        user_ids: item.creatorId,
+                        user_ids: item.creatorId.toString(),
                     }))[0];
+
+                    await new Schedules().reload();
 
                     Broadcaster.broadcastMessage([
                         `💥 Добавлено новое домашнее задание!`,
@@ -98,7 +100,7 @@ export default class extends BaseCommand {
             }
         } else if (args[0] === 'удалить') {
             if (args.length > 1 && !Number.isNaN(Number(args[1]))) {
-                const homework = await homeworks.findOne({ homeworkId: args[1] }).exec();
+                const homework = await homeworks.findOne({ homeworkId: Number(args[1]) }).exec();
 
                 if (homework === null) {
                     return context.reply('Предмет с таким идентификатором отсутствует в базе!');
@@ -118,9 +120,9 @@ export default class extends BaseCommand {
             }
 
             const homeworkList = await homeworks.find().sort({ homeworkId: 1 }).exec();
-            const availableHomeworks: any = [];
+            const availableHomeworks: IHomeworks[] = [];
 
-            homeworkList.forEach(async (homework: any) => {
+            homeworkList.forEach(async (homework) => {
                 const dateDiff = moment(homework.deadline, 'DD.MM.YYYY').diff(homeworkDate, 'days');
                 if (dateDiff > -1 && dateDiff < 7) {
                     availableHomeworks.push(homework);
@@ -132,9 +134,9 @@ export default class extends BaseCommand {
             }
 
             for (const homework of availableHomeworks) {
-                const subject: any = await subjects.findOne({ subjectId: homework.subject }).exec();
+                const subject = await subjects.findOne({ subjectId: homework.subject }).exec();
                 const vkUser = (await VKClient.api.users.get({
-                    user_ids: homework.creatorId,
+                    user_ids: homework.creatorId.toString(),
                 }))[0];
 
                 context.send([

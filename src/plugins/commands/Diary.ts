@@ -51,24 +51,27 @@ export default class extends BaseCommand {
                 `👌 Расписание уроков на ${moment(dayOfMonth + ' ' + month, 'DD MM').format('dddd DD MMM')} [${isWeekEven ? 'четн.' : 'нечетн.'}]\n`
             ];
 
-            const currentSchedule: any = await schedules.find({ subjectDay: weekDay, isEven: isWeekEven }).sort({ subjectTime: 1 }).exec();
+            const currentSchedule = await schedules.find({ subjectDay: weekDay, isEven: isWeekEven }).sort({ subjectTime: 1 }).exec();
             if (currentSchedule.length <= 0) {
                 return context.reply('В данный день уроки отсутствуют 🙌😊');
             }
 
             for (const schedule of currentSchedule) {
-                let subject: any = await subjects.findOne({ subjectId: schedule.subjectId }).exec();
+                let subject = await subjects.findOne({ subjectId: schedule.subjectId }).exec();
 
-                const replacement: any = await replacements.findOne({
+                const replacement = await replacements.findOne({
                     replacedSchedule: schedule.scheduleId,
                     date: moment().format('DD.MM.YYYY')
                 }).exec();
 
                 if (replacement !== null) {
-                    subject = await subjects.findOne({subjectId: replacement.replacingSubject}).exec();
+                    console.log(replacement);
+                    subject = await subjects.findOne({ subjectId: replacement.replacingSubject }).exec();
+                    if (replacement.teacher) subject.teacher = replacement.teacher;
+                    if (replacement.location) subject.location = replacement.location;
                 }
 
-                const subjectTime: any = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
+                const subjectTime = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
                 message.push([
                     `🔸 ${subject.name} (#${subject.subjectId}) ${replacement !== null ? '(Замена)' : ''}`,
                     `⠀⌚ Урок идет с ${subjectTime.timeStarts} по ${subjectTime.timeEnds}`,
