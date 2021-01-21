@@ -2,10 +2,7 @@ import Agenda from 'agenda';
 import moment from 'moment';
 import mongoose from 'mongoose';
 import { BasePlugin } from '../core/classes/BasePlugin';
-import homeworks from '../core/database/models/homeworks';
-import replacements from '../core/database/models/replacements';
 import schedules from '../core/database/models/schedules';
-import subjects from '../core/database/models/subjects';
 import subjectTimes from '../core/database/models/subjectTimes';
 import Broadcaster from '../core/utils/Broadcaster';
 import Logger from '../core/utils/Logger';
@@ -23,7 +20,7 @@ export default class extends BasePlugin {
         const currentJobs = await this.agenda.jobs({ name: /^schedule / });
 
         for (const job of currentJobs) {
-          const schedule = await schedules.findOne({ scheduleId: job.attrs.name.split(/^schedule /).pop() }).exec();
+          const schedule = await schedules.findOne({ scheduleId: Number(job.attrs.name.split(/^schedule /).pop()) }).exec();
             if (schedule === null) {
                 Logger.error(`Job ${job.attrs.name} was removed because it uses scheduleId that doesn't exist anymore.`);
                 job.remove();
@@ -31,29 +28,26 @@ export default class extends BasePlugin {
             }
         }
 
-        const availableSchedules: any = await schedules.find().exec();
+        const availableSchedules = await schedules.find().exec();
 
         for (const schedule of availableSchedules) {
 
             const jobName = `schedule ${schedule.scheduleId}`;
 
             this.agenda.define(jobName, async (job, done) => {
-                let subject: any = await subjects.findOne({ subjectId: schedule.subjectId }).exec();
+                let subject = (await schedule.populate('payload.subject').execPopulate()).payload.subject;
+
+                const replacement = (await schedule.populate('payload.replacement').execPopulate()).payload.replacement;
+                if (replacement !== null) {
+                    Logger.info(`Found replacement for #${subject.subjectId} to #${replacement.replacingSubject}`);
+                    subject = (await replacement.populate('payload.subject').execPopulate()).payload.subject;
+
+                    if (replacement.teacher) subject.teacher = replacement.teacher;
+                    if (replacement.location) subject.location = replacement.location;
+                }
 
                 if (schedule.isEven !== TimeConverter.isEvenWeek(moment())) {
                     return;
-                }
-
-                const replacement: any = await replacements.findOne({
-                    replacedSchedule: schedule.scheduleId,
-                    date: moment().format('DD.MM.YYYY')
-                }).exec();
-                if (replacement !== null) {
-                    Logger.info(`Found replacement for #${subject.subjectId} to #${replacement.replacingSubject}`);
-                    subject = await subjects.findOne({
-                        subjectId: replacement.replacingSubject,
-                        date: moment().format('DD.MM.YYYY')
-                    }).exec();
                 }
 
                 Logger.info(`Sending notification about subject #${subject.subjectId}...`);
@@ -65,9 +59,16 @@ export default class extends BasePlugin {
                     `🧑‍ Преподаватель: ${subject.teacher}`
                 ];
 
-                const homework: any = await homeworks.find({ subject: subject.subjectId, deadline: moment().format('DD.MM.YYYY') }).exec();
-                if (homework.length > 0) {
-                    message.push(`\n💥 По этому предмету было необходимо сделать домашнее задание!`);
+                const subjectHomeworks = (await subject.populate('payload.homeworks').execPopulate()).payload.homeworks;
+                const homeworkNumbers: number[] = [];
+                subjectHomeworks.forEach((homework) => {
+                    if (homework.deadline === moment().format('DD.MM.YYYY')) {
+                        homeworkNumbers.push(homework.homeworkId);
+                    }
+                })
+
+                if (homeworkNumbers.length > 0) {
+                    message.push(`\n⚠ По этому предмету было необходимо сделать домашнее задание #${homeworkNumbers.join(', #')}!`);
                 }
 
                 Broadcaster.broadcastMessage(message.join(`\n`));
@@ -76,11 +77,16 @@ export default class extends BasePlugin {
 
             await this.agenda.start();
 
-            const subjectTime: any = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
+            const subjectTime = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
             const hM = moment(subjectTime.timeStarts, 'HH:mm').subtract({minute: 5}).format('H:m').split(':');
 
-            this.agenda.every(`${hM[1]} ${hM[0]} * * ${schedule.subjectDay}`, jobName);
+            this.agenda.every(`*/1 * * * ${schedule.subjectDay}`, jobName);
         }
+    }
+
+    async reload() {
+        this.agenda.stop();
+        this.execute();
     }
 
     async execute() {
