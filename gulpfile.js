@@ -1,7 +1,7 @@
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
-const clean = require('gulp-clean');
 const nodemon = require('gulp-nodemon');
+const del = require('del')
 
 const tsProject = ts.createProject("tsconfig.json");
 
@@ -17,9 +17,7 @@ gulp.task('copy', () => {
 }); 
  
 gulp.task('clean', () => {
-	return gulp
-		.src("build")
-		.pipe(clean({ read: false }))
+	return del(['build/**/*'])
 })
 
 gulp.task('build', gulp.series("clean", "compile", "copy"));

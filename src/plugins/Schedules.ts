@@ -80,7 +80,7 @@ export default class extends BasePlugin {
             const subjectTime = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
             const hM = moment(subjectTime.timeStarts, 'HH:mm').subtract({minute: 5}).format('H:m').split(':');
 
-            this.agenda.every(`*/1 * * * ${schedule.subjectDay}`, jobName);
+            this.agenda.every(`${hM[1]} ${hM[0]} * * ${schedule.subjectDay}`, jobName);
         }
     }
 
