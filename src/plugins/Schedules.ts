@@ -31,7 +31,6 @@ export default class extends BasePlugin {
         const availableSchedules = await schedules.find().exec();
 
         for (const schedule of availableSchedules) {
-
             const jobName = `schedule ${schedule.scheduleId}`;
 
             this.agenda.define(jobName, async (job, done) => {
@@ -68,7 +67,10 @@ export default class extends BasePlugin {
                 })
 
                 if (homeworkNumbers.length > 0) {
-                    message.push(`\n⚠ По этому предмету было необходимо сделать домашнее задание #${homeworkNumbers.join(', #')}!`);
+                    message.push(
+                        `\n⚠ По этому предмету было необходимо сделать домашнее задание #${homeworkNumbers.join(', #')}`,
+                        `Для просмотра домашнего задания используйте /дз ${subject.subjectId}`
+                    );
                 }
 
                 Broadcaster.broadcastMessage(message.join(`\n`));

@@ -39,11 +39,13 @@ export default class extends BaseCommand {
                             command: 'предметы ' + (pageOffset + 1),
                         },
                         color: Keyboard.POSITIVE_COLOR
+                    }).textButton({
+                        label: 'Закрыть меню',
+                        color: Keyboard.SECONDARY_COLOR
                     })
                 });
             }
         }
-
 
         const subjectList = await this.getSubjects((pageOffset - 1) * 4, pageLimit);
 
@@ -56,6 +58,9 @@ export default class extends BaseCommand {
                         command: 'предметы ' + (pageOffset-1 < 1 ? 1 : (pageOffset - 1)),
                     },
                     color: Keyboard.NEGATIVE_COLOR
+                }).textButton({
+                    label: 'Закрыть меню',
+                    color: Keyboard.SECONDARY_COLOR
                 })
             });
         }
@@ -69,7 +74,7 @@ export default class extends BaseCommand {
             controlsKeyboard.textButton({
                 label: item.name,
                 payload: {
-                    command: 'предметы ' + item.subjectId,
+                    command: 'предмет ' + item.subjectId,
                 },
                 color: Keyboard.PRIMARY_COLOR
             }).row();
@@ -87,7 +92,10 @@ export default class extends BaseCommand {
                 command: 'предметы ' + (pageOffset + 1),
             },
             color: Keyboard.POSITIVE_COLOR
-        }).row();
+        }).row().textButton({
+            label: 'Закрыть меню',
+            color: Keyboard.SECONDARY_COLOR
+        });
 
         context.send({
             message: `Показываю список уроков, страница №${pageOffset}`,

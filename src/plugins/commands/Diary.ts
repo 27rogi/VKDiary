@@ -71,13 +71,13 @@ export default class extends BaseCommand {
                 }
 
                 const subjectTime = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
-                message.push([
+                message.push(
                     `🔸 ${subject.name} (#${subject.subjectId}) ${replacement !== null ? '(Замена)' : ''}`,
                     `⠀⌚ Урок идет с ${subjectTime.timeStarts} по ${subjectTime.timeEnds}`,
                     `⠀🧭 Кабинет: ${subject.location}`,
                     `⠀🧑‍ Преподаватель: ${subject.teacher}`,
-                    `⠀🔍 Номер предмета в базе: ${subject.subjectId}\n`
-                ].join('\n'))
+                    `⠀🔍 Номер расписания в базе: ${schedule.scheduleId}\n`
+                )
             };
 
             context.reply(message.join('\n'));

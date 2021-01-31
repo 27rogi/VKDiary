@@ -99,12 +99,19 @@ export default class extends BasePlugin {
                             return next();
                         }
                     }
- 
+
                     command.execute(context, this.extractArguments(context.text, true), next);
                 });
             }).catch ((err) => {
                 Logger.error(err);
             });
         }
+
+        // Handle wrongly typed commands in DMs, all processing must be done before this listener.
+        VKClient.updates.on('message_new', (context, next) => {
+            if (context.isDM) {
+                context.reply('⚠ Такой команды нет, используйте /помощь для справки');
+            }
+        });
     }
 }

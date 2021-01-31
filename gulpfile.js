@@ -23,10 +23,13 @@ gulp.task('clean', () => {
 gulp.task('build', gulp.series("clean", "compile", "copy"));
 
 gulp.task('start', (done) => {
-		nodemon({
+	nodemon({
+			verbose: true,
 			script: 'build/vkdiary.js',
-			ext: 'js',
-			done: done
+			"watch": ['build/vkdiary.js'],
+			exec: 'node --inspect',
+			done: done,
+			debug: true
 		})
 });
 

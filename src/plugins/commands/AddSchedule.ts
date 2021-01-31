@@ -2,8 +2,10 @@ import { MongoError } from 'mongodb';
 import { MessageContext } from 'vk-io';
 import { BaseCommand } from '../../core/classes/BaseCommand';
 import schedules from '../../core/database/models/schedules';
-import subjects from '../../core/database/models/subjects';
+import { ISubjects } from '../../core/database/models/subjects';
+import subjectTimes from '../../core/database/models/subjectTimes';
 import Logger from '../../core/utils/Logger';
+import Search from '../../core/utils/Search';
 import Schedules from '../Schedules';
 
 
@@ -20,8 +22,11 @@ export default class extends BaseCommand {
     async execute(context: MessageContext, args: string[], next: any) {
         if (args.length > 3) {
 
-            if (!(await subjects.findOne({ subjectId: Number(args[0]) }).exec())) {
-                return context.reply('Предмета с таким идентификатором нет в базе данных.');
+            const subject: ISubjects = await Search.findSubject(args[0]);
+            if (subject === null) return context.reply('Предмет с таким номером или именем не найден в базе!');
+
+            if (await subjectTimes.find({timeId: Number(args[1])}).exec()) {
+                return context.reply('Такого времени для расписания не найдено!');
             }
 
             if (Number(args[2]) > 7 || Number(args[3]) < 1) {

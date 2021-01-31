@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { IHomeworks } from './homeworks';
+import { ISchedules } from './schedules';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 export interface ISubjects extends mongoose.Document {
     subjectId: number
@@ -8,7 +9,8 @@ export interface ISubjects extends mongoose.Document {
     teacher: string
     created?: Date
     payload?: {
-        homeworks?: IHomeworks[]
+        homeworks?: IHomeworks[],
+        schedules?: ISchedules[],
     }
 };
 
@@ -30,12 +32,22 @@ const subjects = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 })
 
 subjects.virtual('payload.homeworks', {
     ref: 'Homeworks',
     localField: 'subjectId',
     foreignField: 'subject',
+    justOne: false,
+});
+
+subjects.virtual('payload.schedules', {
+    ref: 'Schedules',
+    localField: 'subjectId',
+    foreignField: 'subjectId',
     justOne: false,
 });
 

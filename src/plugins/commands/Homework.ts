@@ -6,6 +6,7 @@ import homeworks, { IHomeworks } from '../../core/database/models/homeworks';
 import subjects from '../../core/database/models/subjects';
 import Broadcaster from '../../core/utils/Broadcaster';
 import Logger from '../../core/utils/Logger';
+import Search from '../../core/utils/Search';
 import VKClient from '../../core/VKClient';
 import Schedules from '../Schedules';
 
@@ -114,12 +115,21 @@ export default class extends BaseCommand {
             }
         } else {
             let homeworkDate = moment(Date.now());
+            let homeworkList: IHomeworks[];
 
             if (args[0] !== undefined) {
-                homeworkDate = moment(args[0], 'DD.MM.YYYY');
+                const subject = await Search.findSubject(args[0]);
+                if (subject === null) return context.reply('Предмет с таким номером или именем не найден в базе!');
+
+                homeworkList = await homeworks.find({subject: subject.subjectId}).sort({ homeworkId: 1 }).exec();
+            } else {
+                homeworkList = await homeworks.find().sort({ homeworkId: 1 }).exec();
             }
 
-            const homeworkList = await homeworks.find().sort({ homeworkId: 1 }).exec();
+            if (args[1] !== undefined) {
+                homeworkDate = moment(args[1], 'DD.MM.YYYY');
+            }
+
             const availableHomeworks: IHomeworks[] = [];
 
             homeworkList.forEach(async (homework) => {

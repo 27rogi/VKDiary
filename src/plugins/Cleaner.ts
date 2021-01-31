@@ -20,7 +20,7 @@ export default class extends BasePlugin {
         const replacementList = await replacements.find().exec();
         replacementList.forEach(async (replacement) => {
             if (moment(replacement.date, 'DD.MM.YYYY').isAfter(Date.now())) {
-                Logger.warn(`Homework #${replacement.replacementId} is outdated and going to be deleted.`);
+                Logger.warn(`Replacement #${replacement.replacementId} is outdated and going to be deleted.`);
             }
         });
     }

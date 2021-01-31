@@ -4,10 +4,11 @@ import { MessageContext } from 'vk-io';
 import { BaseCommand } from '../../core/classes/BaseCommand';
 import replacements from '../../core/database/models/replacements';
 import schedules from '../../core/database/models/schedules';
-import subjects from '../../core/database/models/subjects';
+import { ISubjects } from '../../core/database/models/subjects';
 import subjectTimes from '../../core/database/models/subjectTimes';
 import Broadcaster from '../../core/utils/Broadcaster';
 import Logger from '../../core/utils/Logger';
+import Search from '../../core/utils/Search';
 import Schedules from '../Schedules';
 
 export default class extends BaseCommand {
@@ -22,14 +23,12 @@ export default class extends BaseCommand {
 
     async execute(context: MessageContext, args: string[], next: any) {
         if (args.length > 2) {
-
             if (await schedules.findOne({ scheduleId: Number(args[0]) }).exec() === null) {
                 return context.reply(`Расписания с таким номером не существует!`);
             }
 
-            if (await subjects.findOne({ subjectId: Number(args[1]) }).exec() === null) {
-                return context.reply(`Предмета с таким номером не существует!`);
-            }
+            const subject: ISubjects = await Search.findSubject(args[1]);;
+            if (subject === null) return context.reply('Предмет с таким номером или именем не найден в базе!');
 
             const date = moment(args[2], 'DD.MM.YYYY');
 
@@ -39,7 +38,7 @@ export default class extends BaseCommand {
 
             const replacement = new replacements({
                 replacedSchedule: args[0],
-                replacingSubject: args[1],
+                replacingSubject: subject.subjectId,
                 date: date.format('DD.MM.YYYY'),
             });
 
@@ -70,7 +69,7 @@ export default class extends BaseCommand {
             });
 
         } else {
-            return context.reply('Отсутствуют аргументы, используйте /добавитьзамену <номер_расписания> <номер_предмета_замены> <дата_замены> <номер_кабинета?> <учитель?> ');
+            return context.reply('Отсутствуют аргументы, используйте /добавитьзамену <номер_расписания> <номер_заменяющего_предмета> <дата_замены> <номер_кабинета?> <учитель?> ');
         }
     }
 }
