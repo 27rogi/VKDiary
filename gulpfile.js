@@ -2,6 +2,7 @@ const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const nodemon = require('gulp-nodemon');
 const del = require('del');
+const jest = require('gulp-jest').default;
 
 const tsProject = ts.createProject('tsconfig.json');
 
@@ -17,7 +18,19 @@ gulp.task('clean', () => {
     return del(['build/**/*']);
 });
 
-gulp.task('build', gulp.series('clean', 'compile', 'copy'));
+gulp.task('jest', function () {
+	return gulp.src('src/tests').pipe(jest({
+	  "preprocessorIgnorePatterns": [
+		"<rootDir>/build/", "<rootDir>/node_modules/"
+	  ],
+	  "testPathIgnorePatterns": [
+		"/build/", "/node_modules/"
+	  ],
+	  "automock": false
+	}));
+});
+
+gulp.task('build', gulp.series('jest', 'clean', 'compile', 'copy'));
 
 gulp.task('start', (done) => {
     nodemon({

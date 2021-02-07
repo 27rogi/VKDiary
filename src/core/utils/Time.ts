@@ -1,7 +1,7 @@
 import moment, { Moment } from 'moment';
 
 export default {
-    getHMMTime(time: string) {
+    getTinyTime(time: string) {
         return moment(time, 'HH:mm').format('HH:mm');
     },
     isEvenWeek(date: Moment) {
