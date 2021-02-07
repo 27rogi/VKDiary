@@ -7,7 +7,7 @@ import subjectTimes from '../core/database/models/subjectTimes';
 import Broadcaster from '../core/utils/Broadcaster';
 import Cleaner from '../core/utils/Cleaner';
 import Logger from '../core/utils/Logger';
-import TimeConverter from '../core/utils/TimeConverter';
+import Time from '../core/utils/Time';
 
 export default class extends BasePlugin {
     agenda: Agenda;
@@ -43,7 +43,7 @@ export default class extends BasePlugin {
 
                 const replacement = (await schedule.populate('payload.replacement').execPopulate()).payload.replacement;
                 if (replacement !== null) {
-                    if (!moment(moment(replacement.date, 'DD.MM.YYYY').format('DD.MM.YYYY')).isSame(moment(new Date(), 'DD.MM.YYYY').format('DD.MM.YYYY'))) return;
+                    if (!moment(replacement.date, 'DD.MM.YYYY').isSame(moment(), 'days')) return;
 
                     Logger.info(`Found replacement for #${subject.subjectId} to #${replacement.replacingSubject}`);
                     subject = (await replacement.populate('payload.subject').execPopulate()).payload.subject;
@@ -52,7 +52,7 @@ export default class extends BasePlugin {
                     if (replacement.location) subject.location = replacement.location;
                 }
 
-                if (schedule.isEven !== TimeConverter.isEvenWeek(moment())) {
+                if (schedule.isEven !== Time.isEvenWeek(moment())) {
                     return;
                 }
 

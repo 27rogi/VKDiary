@@ -3,7 +3,7 @@ import { MessageContext } from 'vk-io';
 import { BaseCommand } from '../../core/classes/BaseCommand';
 import subjectTimes from '../../core/database/models/subjectTimes';
 import Logger from '../../core/utils/Logger';
-import TimeConverter from '../../core/utils/TimeConverter';
+import Time from '../../core/utils/Time';
 
 export default class extends BaseCommand {
     constructor() {
@@ -18,8 +18,8 @@ export default class extends BaseCommand {
     async execute(context: MessageContext, args: string[], next: any) {
         if (args.length > 1) {
             const subjectTime = new subjectTimes({
-                timeStarts: TimeConverter.getHMMTime(args[0]),
-                timeEnds: TimeConverter.getHMMTime(args[1]),
+                timeStarts: Time.getTinyTime(args[0]),
+                timeEnds: Time.getTinyTime(args[1]),
             });
 
             subjectTime.save((err: MongoError) => {

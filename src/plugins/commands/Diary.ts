@@ -6,7 +6,7 @@ import schedules from '../../core/database/models/schedules';
 import subjects from '../../core/database/models/subjects';
 import subjectTimes from '../../core/database/models/subjectTimes';
 import Cleaner from '../../core/utils/Cleaner';
-import TimeConverter from '../../core/utils/TimeConverter';
+import Time from '../../core/utils/Time';
 
 export default class extends BaseCommand {
     constructor() {
@@ -46,7 +46,7 @@ export default class extends BaseCommand {
             return context.reply('В указанном месяце отсутствует число ' + args[0]);
         }
 
-        const isWeekEven = TimeConverter.isEvenWeek(moment(`${dayOfMonth} ${month}`, 'DD MM'));
+        const isWeekEven = Time.isEvenWeek(moment(`${dayOfMonth} ${month}`, 'DD MM'));
 
         const message: string[] = [`👌 Расписание уроков на ${moment(`${dayOfMonth} ${month}`, 'DD MM').format('dddd DD MMM')} [${isWeekEven ? 'четн.' : 'нечетн.'}]\n`];
 
