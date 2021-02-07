@@ -2,8 +2,8 @@ import { MessageContext } from 'vk-io';
 
 export interface ICommandData {
     command: string;
-    aliases?: string[];
     permissionLevel: number;
+    aliases?: string[];
     local?: boolean;
 }
 
@@ -13,6 +13,7 @@ export interface IBaseCommand {
     getPermissionLevel(): number;
     hasPermissionLevel(number: number): boolean;
 
+    middleware(context: MessageContext, args: string[]): () => boolean | Promise<boolean>;
     execute(context: MessageContext, args: string[], next: any): void | Promise<void>;
 }
 
@@ -25,9 +26,8 @@ export class BaseCommand {
 
     getAliases() {
         if (this.commandData.aliases) {
-            return this.commandData.aliases
-        } else
-            return null;
+            return this.commandData.aliases;
+        } else return null;
     }
 
     isLocal() {
@@ -40,6 +40,10 @@ export class BaseCommand {
 
     hasPermissionLevel(number: number) {
         return number >= this.commandData.permissionLevel;
+    }
+
+    middleware(context: MessageContext, args: string[]) {
+        return true;
     }
 
     execute(context: MessageContext, args: string[], next: any) {

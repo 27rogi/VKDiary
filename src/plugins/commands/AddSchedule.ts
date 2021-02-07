@@ -8,24 +8,22 @@ import Logger from '../../core/utils/Logger';
 import Search from '../../core/utils/Search';
 import Schedules from '../Schedules';
 
-
 export default class extends BaseCommand {
     constructor() {
         super();
         this.commandData = {
             command: 'добавитьрасписание',
             permissionLevel: 99,
-            local: true
-        }
+            local: true,
+        };
     }
 
     async execute(context: MessageContext, args: string[], next: any) {
         if (args.length > 3) {
-
             const subject: ISubjects = await Search.findSubject(args[0]);
             if (subject === null) return context.reply('Предмет с таким номером или именем не найден в базе!');
 
-            if (await subjectTimes.find({timeId: Number(args[1])}).exec()) {
+            if (await subjectTimes.find({ timeId: Number(args[1]) }).exec()) {
                 return context.reply('Такого времени для расписания не найдено!');
             }
 
@@ -37,7 +35,7 @@ export default class extends BaseCommand {
                 subjectId: Number(args[0]),
                 subjectTime: Number(args[1]),
                 subjectDay: Number(args[2]),
-                isEven: (args[3] === 'true')
+                isEven: args[3] === 'true',
             });
 
             schedule.save(async (err: MongoError, item) => {
@@ -53,7 +51,6 @@ export default class extends BaseCommand {
 
                 return context.reply('Предмет успешно добавлен в базу данных!');
             });
-
         } else {
             return context.reply('Отсутствуют аргументы, используйте /addschedule <subjectId> <subjectTime> <day(1-7)> <even?>');
         }

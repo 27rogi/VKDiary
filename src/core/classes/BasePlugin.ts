@@ -1,4 +1,3 @@
-
 export interface IPluginData {
     name: string;
     version: string | number;

@@ -5,6 +5,7 @@ import { BaseCommand } from '../../core/classes/BaseCommand';
 import homeworks, { IHomeworks } from '../../core/database/models/homeworks';
 import subjects from '../../core/database/models/subjects';
 import Broadcaster from '../../core/utils/Broadcaster';
+import Cleaner from '../../core/utils/Cleaner';
 import Logger from '../../core/utils/Logger';
 import Search from '../../core/utils/Search';
 import VKClient from '../../core/VKClient';
@@ -17,12 +18,11 @@ export default class extends BaseCommand {
             command: 'домашка',
             aliases: ['дз', 'задания'],
             permissionLevel: 0,
-            local: true
-        }
+            local: true,
+        };
     }
 
     async execute(context: MessageContext, args: string[], next: any) {
-
         if (args[0] === 'добавить') {
             if (args.length > 3 && !Number.isNaN(Number(args[1]))) {
                 const subject = await subjects.findOne({ subjectId: Number(args[1]) }).exec();
@@ -61,7 +61,7 @@ export default class extends BaseCommand {
                     subject: args[1],
                     target,
                     deadline: homeworkDeadline.format('DD.MM.YYYY'),
-                    creatorId: context.senderId
+                    creatorId: context.senderId,
                 });
 
                 homework.save(async (err: MongoError, item) => {
@@ -72,32 +72,26 @@ export default class extends BaseCommand {
                         Logger.error(err);
                         return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                     }
-                    const subject = await subjects.findOne({
-                        subjectId: item.subject
-                    }).exec();
+                    const subject = await subjects
+                        .findOne({
+                            subjectId: item.subject,
+                        })
+                        .exec();
 
-                    const vkUser = (await VKClient.api.users.get({
-                        user_ids: item.creatorId.toString(),
-                    }))[0];
+                    const vkUser = (
+                        await VKClient.api.users.get({
+                            user_ids: item.creatorId.toString(),
+                        })
+                    )[0];
 
                     await new Schedules().reload();
 
-                    Broadcaster.broadcastMessage([
-                        `💥 Добавлено новое домашнее задание!`,
-                        ``,
-                        `Предмет: ${subject.name}`,
-                        `Добавил: ${vkUser.first_name} ${vkUser.last_name}`,
-                        `Номер в базе: ${item.homeworkId}`
-                    ].join('\n'));
+                    await Broadcaster.broadcastMessage([`💥 Добавлено новое домашнее задание!`, ``, `Предмет: ${subject.name}`, `Добавил: ${vkUser.first_name} ${vkUser.last_name}`, `Номер в базе: ${item.homeworkId}`].join('\n'));
 
                     return context.reply('Предмет успешно добавлен в базу данных!');
                 });
-
             } else {
-                context.reply([
-                    '🔸 Используйте: /дз добавить <номер_предмета> <дата_сдачи>\n\n<описание>\n\n',
-                    '📝 Пример: /дз добавить 1 17.01.2021\n\nНужно сделать работу в вижуал студии!'
-                ].join('\n'));
+                await context.reply(['🔸 Используйте: /дз добавить <номер_предмета> <дата_сдачи>\n\n<описание>\n\n', '📝 Пример: /дз добавить 1 17.01.2021\n\nНужно сделать работу в вижуал студии!'].join('\n'));
             }
         } else if (args[0] === 'удалить') {
             if (args.length > 1 && !Number.isNaN(Number(args[1]))) {
@@ -107,11 +101,11 @@ export default class extends BaseCommand {
                     return context.reply('Предмет с таким идентификатором отсутствует в базе!');
                 }
 
-                homework.delete().then((res) => {
+                await homework.delete().then((res: IHomeworks) => {
                     return context.reply(`Удалено задание с идентификатором ${res.homeworkId}`);
                 });
             } else {
-                context.reply('Указанный идентификатор неправилен');
+                await context.reply('Указанный идентификатор неправилен');
             }
         } else {
             let homeworkDate = moment(Date.now());
@@ -121,10 +115,12 @@ export default class extends BaseCommand {
                 const subject = await Search.findSubject(args[0]);
                 if (subject === null) return context.reply('Предмет с таким номером или именем не найден в базе!');
 
-                homeworkList = await homeworks.find({subject: subject.subjectId}).sort({ homeworkId: 1 }).exec();
+                homeworkList = await homeworks.find({ subject: subject.subjectId }).sort({ homeworkId: 1 }).exec();
             } else {
                 homeworkList = await homeworks.find().sort({ homeworkId: 1 }).exec();
             }
+
+            await Cleaner.cleanAll();
 
             if (args[1] !== undefined) {
                 homeworkDate = moment(args[1], 'DD.MM.YYYY');
@@ -132,12 +128,12 @@ export default class extends BaseCommand {
 
             const availableHomeworks: IHomeworks[] = [];
 
-            homeworkList.forEach(async (homework) => {
+            homeworkList.forEach((homework) => {
                 const dateDiff = moment(homework.deadline, 'DD.MM.YYYY').diff(homeworkDate, 'days');
                 if (dateDiff > -1 && dateDiff < 7) {
                     availableHomeworks.push(homework);
                 }
-            })
+            });
 
             if (availableHomeworks.length <= 0) {
                 return context.reply('Домашних заданий на ближайшее время не найдено! :)');
@@ -145,23 +141,19 @@ export default class extends BaseCommand {
 
             for (const homework of availableHomeworks) {
                 const subject = await subjects.findOne({ subjectId: homework.subject }).exec();
-                const vkUser = (await VKClient.api.users.get({
-                    user_ids: homework.creatorId.toString(),
-                }))[0];
+                const vkUser = (
+                    await VKClient.api.users.get({
+                        user_ids: homework.creatorId.toString(),
+                    })
+                )[0];
 
-                context.send([
-                    `🤓 Домашнее задание по предмету ${subject.name}`,
-                    ``,
-                    `⌚ Необходимо сдать до ${homework.deadline}`,
-                    `👥 Добавил: ${vkUser.first_name} ${vkUser.last_name}`,
-                    `📝 Описание: ${homework.target.description}`,
-                ].join('\n'));
+                await context.send([`🤓 Домашнее задание по предмету ${subject.name}`, ``, `⌚ Необходимо сдать до ${homework.deadline}`, `👥 Добавил: ${vkUser.first_name} ${vkUser.last_name}`, `📝 Описание: ${homework.target.description}`].join('\n'));
 
                 if (homework.target.attachments) {
                     await context.send({
                         message: '🔸 Прикрепленные документы:',
-                        attachment: homework.target.attachments
-                    })
+                        attachment: homework.target.attachments,
+                    });
                 }
             }
         }

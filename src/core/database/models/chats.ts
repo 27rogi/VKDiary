@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 export interface IChats extends mongoose.Document {
-    chatId: number
-    botId: number
-    doAnnounce: boolean
-};
+    chatId: number;
+    botId: number;
+    doAnnounce: boolean;
+}
 
 const chats = new mongoose.Schema({
     chatId: {

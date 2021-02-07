@@ -10,8 +10,8 @@ export default class extends BaseCommand {
         this.commandData = {
             command: 'добавитьурок',
             permissionLevel: 99,
-            local: true
-        }
+            local: true,
+        };
     }
 
     async execute(context: MessageContext, args: string[], next: any) {
@@ -19,7 +19,7 @@ export default class extends BaseCommand {
             const subject = new subjects({
                 name: args[0],
                 location: args[1],
-                teacher: args[2]
+                teacher: args[2],
             });
 
             subject.save((err: MongoError) => {
@@ -31,8 +31,7 @@ export default class extends BaseCommand {
                     return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                 }
                 return context.reply('Предмет успешно добавлен в базу данных!');
-            })
-
+            });
         } else {
             return context.reply('Отсутствуют аргументы, используйте /addsubject <name> <location> <teacher>');
         }

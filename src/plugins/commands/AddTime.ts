@@ -11,8 +11,8 @@ export default class extends BaseCommand {
         this.commandData = {
             command: 'добавитьвремя',
             permissionLevel: 99,
-            local: true
-        }
+            local: true,
+        };
     }
 
     async execute(context: MessageContext, args: string[], next: any) {
@@ -31,8 +31,7 @@ export default class extends BaseCommand {
                     return context.reply('Произошла ошибка при добавлении, обратитесь к администратору!');
                 }
                 return context.reply('Время успешно добавлено в базу данных!');
-            })
-
+            });
         } else {
             return context.reply('Отсутствуют аргументы, используйте /добавитьвремя <начало> <конец>');
         }

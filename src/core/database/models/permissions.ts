@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
 export interface IPermissions extends mongoose.Document {
-    userId: string
-    permissionLevel: number
-};
+    userId: string;
+    permissionLevel: number;
+}
 
 const permissions = new mongoose.Schema({
     userId: {

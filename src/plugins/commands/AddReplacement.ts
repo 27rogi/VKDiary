@@ -17,17 +17,17 @@ export default class extends BaseCommand {
         this.commandData = {
             command: 'добавитьзамену',
             permissionLevel: 99,
-            local: true
-        }
+            local: true,
+        };
     }
 
     async execute(context: MessageContext, args: string[], next: any) {
         if (args.length > 2) {
-            if (await schedules.findOne({ scheduleId: Number(args[0]) }).exec() === null) {
+            if ((await schedules.findOne({ scheduleId: Number(args[0]) }).exec()) === null) {
                 return context.reply(`Расписания с таким номером не существует!`);
             }
 
-            const subject: ISubjects = await Search.findSubject(args[1]);;
+            const subject: ISubjects = await Search.findSubject(args[1]);
             if (subject === null) return context.reply('Предмет с таким номером или именем не найден в базе!');
 
             const date = moment(args[2], 'DD.MM.YYYY');
@@ -58,16 +58,13 @@ export default class extends BaseCommand {
 
                 const subject = (await item.populate('payload.subject').execPopulate()).payload.subject;
                 const schedule = (await item.populate('payload.schedule').execPopulate()).payload.schedule;
-                const subjectTime = await subjectTimes.findOne({timeId: schedule.subjectTime}).exec();
+                const subjectTime = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
                 const date = moment(item.date, 'DD.MM.YYYY');
 
-                Broadcaster.broadcastMessage([
-                    `❗ На ${date.format('DD MMMM')} в ${subjectTime.timeStarts} назначена замена предметом ${subject.name}`,
-                ].join('\n'));
+                await Broadcaster.broadcastMessage([`❗ На ${date.format('DD MMMM')} в ${subjectTime.timeStarts} назначена замена предметом ${subject.name}`].join('\n'));
 
                 return context.reply('Замена добавлена в базу данных!');
             });
-
         } else {
             return context.reply('Отсутствуют аргументы, используйте /добавитьзамену <номер_расписания> <номер_заменяющего_предмета> <дата_замены> <номер_кабинета?> <учитель?> ');
         }

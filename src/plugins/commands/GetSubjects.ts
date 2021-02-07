@@ -9,16 +9,20 @@ export default class extends BaseCommand {
         this.commandData = {
             command: 'предметы',
             permissionLevel: 0,
-            local: true
-        }
+            local: true,
+        };
     }
 
     async getSubjects(pageOffset: number, limit: number) {
-        return subjects.find({
-            subjectId: { $gt: pageOffset }
-        }).sort({
-            subjectId: 1,
-        }).limit(limit).exec();
+        return subjects
+            .find({
+                subjectId: { $gt: pageOffset },
+            })
+            .sort({
+                subjectId: 1,
+            })
+            .limit(limit)
+            .exec();
     }
 
     async execute(context: MessageContext, args: string[], next: any) {
@@ -29,20 +33,22 @@ export default class extends BaseCommand {
 
         if (args.length > 0 && Number.isInteger(Number(args[0]))) {
             if (!(Number(args[0]) < 1)) {
-                pageOffset = Number(args[0])
+                pageOffset = Number(args[0]);
             } else {
                 return context.reply({
                     message: 'Страницы начинаются с единицы!',
-                    keyboard: controlsKeyboard.textButton({
-                        label: 'Вперед ▶',
-                        payload: {
-                            command: 'предметы ' + (pageOffset + 1),
-                        },
-                        color: Keyboard.POSITIVE_COLOR
-                    }).textButton({
-                        label: 'Закрыть меню',
-                        color: Keyboard.SECONDARY_COLOR
-                    })
+                    keyboard: controlsKeyboard
+                        .textButton({
+                            label: 'Вперед ▶',
+                            payload: {
+                                command: 'предметы ' + (pageOffset + 1),
+                            },
+                            color: Keyboard.POSITIVE_COLOR,
+                        })
+                        .textButton({
+                            label: 'Закрыть меню',
+                            color: Keyboard.SECONDARY_COLOR,
+                        }),
                 });
             }
         }
@@ -52,16 +58,18 @@ export default class extends BaseCommand {
         if (subjectList.length <= 0) {
             return context.reply({
                 message: 'Больше предметов нет, вернитесь на прошлую страницу',
-                keyboard: controlsKeyboard.textButton({
-                    label: '◀ Назад',
-                    payload: {
-                        command: 'предметы ' + (pageOffset-1 < 1 ? 1 : (pageOffset - 1)),
-                    },
-                    color: Keyboard.NEGATIVE_COLOR
-                }).textButton({
-                    label: 'Закрыть меню',
-                    color: Keyboard.SECONDARY_COLOR
-                })
+                keyboard: controlsKeyboard
+                    .textButton({
+                        label: '◀ Назад',
+                        payload: {
+                            command: 'предметы ' + (pageOffset - 1 < 1 ? 1 : pageOffset - 1),
+                        },
+                        color: Keyboard.NEGATIVE_COLOR,
+                    })
+                    .textButton({
+                        label: 'Закрыть меню',
+                        color: Keyboard.SECONDARY_COLOR,
+                    }),
             });
         }
 
@@ -71,35 +79,41 @@ export default class extends BaseCommand {
             }
             Logger.info(item.name);
 
-            controlsKeyboard.textButton({
-                label: item.name,
+            controlsKeyboard
+                .textButton({
+                    label: item.name,
+                    payload: {
+                        command: 'предмет ' + item.subjectId,
+                    },
+                    color: Keyboard.PRIMARY_COLOR,
+                })
+                .row();
+        });
+
+        controlsKeyboard
+            .textButton({
+                label: '◀ Назад',
                 payload: {
-                    command: 'предмет ' + item.subjectId,
+                    command: 'предметы ' + (pageOffset - 1 < 1 ? 1 : pageOffset - 1),
                 },
-                color: Keyboard.PRIMARY_COLOR
-            }).row();
-        });
+                color: Keyboard.NEGATIVE_COLOR,
+            })
+            .textButton({
+                label: 'Вперед ▶',
+                payload: {
+                    command: 'предметы ' + (pageOffset + 1),
+                },
+                color: Keyboard.POSITIVE_COLOR,
+            })
+            .row()
+            .textButton({
+                label: 'Закрыть меню',
+                color: Keyboard.SECONDARY_COLOR,
+            });
 
-        controlsKeyboard.textButton({
-            label: '◀ Назад',
-            payload: {
-                command: 'предметы ' + (pageOffset-1 < 1 ? 1 : (pageOffset - 1)),
-            },
-            color: Keyboard.NEGATIVE_COLOR
-        }).textButton({
-            label: 'Вперед ▶',
-            payload: {
-                command: 'предметы ' + (pageOffset + 1),
-            },
-            color: Keyboard.POSITIVE_COLOR
-        }).row().textButton({
-            label: 'Закрыть меню',
-            color: Keyboard.SECONDARY_COLOR
-        });
-
-        context.send({
+        await context.send({
             message: `Показываю список уроков, страница №${pageOffset}`,
-            keyboard: controlsKeyboard
-        })
+            keyboard: controlsKeyboard,
+        });
     }
 }

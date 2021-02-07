@@ -4,42 +4,45 @@ import { ISubjects } from './subjects';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export interface IReplacements extends mongoose.Document {
-    replacementId: number,
-    replacedSchedule: number
-    replacingSubject: number
-    date: string
+    replacementId: number;
+    replacedSchedule: number;
+    replacingSubject: number;
+    date: string;
     payload?: {
-        schedule?: ISchedules,
-        subject?: ISubjects
-    }
-    teacher?: string
-    location?: number
-};
+        schedule?: ISchedules;
+        subject?: ISubjects;
+    };
+    teacher?: string;
+    location?: number;
+}
 
-const replacements = new mongoose.Schema({
-    replacementId: Number,
-    replacedSchedule: {
-        type: Number,
-        required: true,
+const replacements = new mongoose.Schema(
+    {
+        replacementId: Number,
+        replacedSchedule: {
+            type: Number,
+            required: true,
+        },
+        replacingSubject: {
+            type: Number,
+            required: true,
+        },
+        date: {
+            type: String,
+            required: true,
+        },
+        teacher: {
+            type: String,
+        },
+        location: {
+            type: Number,
+        },
     },
-    replacingSubject: {
-        type: Number,
-        required: true,
-    },
-    date: {
-        type: String,
-        required: true,
-    },
-    teacher: {
-        type: String
-    },
-    location: {
-        type: Number
+    {
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true },
     }
-}, {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
-})
+);
 
 replacements.virtual('payload.schedule', {
     ref: 'Schedules',

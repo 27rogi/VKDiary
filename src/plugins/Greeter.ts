@@ -13,10 +13,17 @@ export default class Greeter extends BasePlugin {
     execute() {
         VKClient.updates.on('chat_invite_user', async (context: MessageContext, next: any) => {
             if (context.eventMemberId !== settings.global.groupId) return;
-            Logger.info(`Invited in chat #${context.$groupId}, adding chat to database`)
+            Logger.info(`Invited in chat #${context.$groupId}, adding chat to database`);
 
-            if (await chats.findOne({ botId: context.eventMemberId, chatId: context.peerId }).exec() !== null) {
-                Logger.info(`Bot already has information about this chat`)
+            if (
+                (await chats
+                    .findOne({
+                        botId: context.eventMemberId,
+                        chatId: context.peerId,
+                    })
+                    .exec()) !== null
+            ) {
+                Logger.info(`Bot already has information about this chat`);
                 return context.send(`🙌 Бот уже был добавлен в беседу ранее, информация в базе сохранена!`);
             }
 
@@ -26,14 +33,14 @@ export default class Greeter extends BasePlugin {
                 doAnnounce: true,
             });
 
-            chat.save((err: MongoError) => {
+            chat.save(async (err: MongoError) => {
                 if (err) {
                     if (err.code === 11000) {
                         return context.send(`🙌 Бот уже был добавлен в беседу ранее, информация в базе сохранена!`);
                     }
                     return context.send(`⚠ Ошибка добавления беседы в базу данных, свяжитесь с администратором бота для помощи!`);
                 }
-                context.send(`
+                await context.send(`
                 🙌 Бот успешно добавлен в диалог!
                 ⚠ Данный диалог будет добавлен в базу бота для автоматической рассылки предупреждений о начале уроков с подробной информацией, если таковая будет включена в настройках бота
 
@@ -42,21 +49,20 @@ export default class Greeter extends BasePlugin {
                 Для включения клавиатуры бота используйте команду: /help
                 `);
             });
-
         });
 
         VKClient.updates.on('chat_kick_user', (context: MessageContext, next: any) => {
-            Logger.info(`User was deleted from chat #${context.$groupId}, checking if this user is me`)
+            Logger.info(`User was deleted from chat #${context.$groupId}, checking if this user is me`);
             if (context.eventMemberId !== settings.global.groupId) return;
 
-            chats.deleteMany({
-                chatId: context.id,
-                botId: context.eventMemberId
-            })
-            .catch((err) => {
-                Logger.error(err);;
-            });
-
+            chats
+                .deleteMany({
+                    chatId: context.id,
+                    botId: context.eventMemberId,
+                })
+                .catch((err) => {
+                    Logger.error(err);
+                });
         });
     }
 }

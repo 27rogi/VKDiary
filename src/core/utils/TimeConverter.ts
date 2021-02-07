@@ -6,5 +6,5 @@ export default {
     },
     isEvenWeek(date: Moment) {
         return Math.abs(date.week() - moment('01 09', 'DD MM').week()) % 2 === 1;
-    }
-}
+    },
+};

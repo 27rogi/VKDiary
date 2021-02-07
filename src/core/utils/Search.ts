@@ -1,6 +1,5 @@
 import subjects, { ISubjects } from '../database/models/subjects';
 
-
 export default {
     /**
      * This function allows you to find subject by id or name, to get multiple subjects use findSubjects()
@@ -27,14 +26,11 @@ export default {
         let subjectList: ISubjects[];
 
         if (Number.isNaN(Number(searchQuery))) {
-            subjectList = await subjects.find({name: {$regex: String(searchQuery), $options: 'i'}}).exec();
+            subjectList = await subjects.find({ name: { $regex: String(searchQuery), $options: 'i' } }).exec();
         } else {
-            subjectList = await subjects.find({subjectId: Number(searchQuery)}).exec();
+            subjectList = await subjects.find({ subjectId: Number(searchQuery) }).exec();
         }
 
         return subjectList;
-    }
-}
-
-
-
+    },
+};
