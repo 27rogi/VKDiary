@@ -32,7 +32,7 @@ export default class extends BaseCommand {
             }
 
             const schedule = new schedules({
-                subjectId: Number(args[0]),
+                subjectId: subject.subjectId,
                 subjectTime: Number(args[1]),
                 subjectDay: Number(args[2]),
                 isEven: args[3] === 'true',
