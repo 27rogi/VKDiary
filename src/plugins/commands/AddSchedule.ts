@@ -23,7 +23,7 @@ export default class extends BaseCommand {
             const subject: ISubjects = await Search.findSubject(args[0]);
             if (subject === null) return context.reply('Предмет с таким номером или именем не найден в базе!');
 
-            if (await subjectTimes.find({ timeId: Number(args[1]) }).exec()) {
+            if ((await subjectTimes.findOne({ timeId: Number(args[1]) }).exec()) === null) {
                 return context.reply('Такого времени для расписания не найдено!');
             }
 
