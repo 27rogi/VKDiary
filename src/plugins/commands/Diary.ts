@@ -31,7 +31,7 @@ export default class extends BaseCommand {
         }
 
         let weekDay = moment(dayOfMonth, 'DD').day();
-        let month;
+        let month = moment(Date.now()).month() + 1;
 
         if (args[1]) {
             if (Number(args[1]) <= 12 && Number(args[1]) > 0) {

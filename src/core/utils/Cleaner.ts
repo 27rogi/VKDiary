@@ -19,7 +19,7 @@ export default {
     async cleanReplacements() {
         const replacementList = await replacements.find().exec();
         replacementList.forEach(async (replacement) => {
-            if (moment(replacement.date, 'DD.MM.YYYY').isAfter(moment(), 'days')) {
+            if (moment(replacement.date, 'DD.MM.YYYY').diff(moment(Date.now()), 'days') > 0) {
                 Logger.warn(`Replacement #${replacement.replacementId} is outdated and going to be deleted.`);
                 await replacement.remove();
             }
