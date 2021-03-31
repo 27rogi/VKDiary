@@ -1,8 +1,8 @@
 import Agenda from 'agenda';
 import moment from 'moment';
-import mongoose from 'mongoose';
+import mongoose, { Query } from 'mongoose';
 import { BasePlugin } from '../core/classes/BasePlugin';
-import schedules from '../core/database/models/schedules';
+import schedules, { ISchedules } from '../core/database/models/schedules';
 import subjectTimes from '../core/database/models/subjectTimes';
 import Broadcaster from '../core/utils/Broadcaster';
 import Cleaner from '../core/utils/Cleaner';
@@ -18,42 +18,46 @@ export default class extends BasePlugin {
     }
 
     async createJobs() {
-        const currentJobs = await this.agenda.jobs({ name: /^schedule / });
+        const currentJobs = await this.agenda.jobs({ name: /^schedule_time / });
 
         for (const job of currentJobs) {
-            const schedule = await schedules
+            const times = await subjectTimes
                 .findOne({
-                    scheduleId: Number(job.attrs.name.split(/^schedule /).pop()),
+                    timeId: Number(job.attrs.name.split(/^schedule_time /).pop()),
                 })
                 .exec();
-            if (schedule === null) {
-                Logger.error(`Job ${job.attrs.name} was removed because it uses scheduleId that doesn't exist anymore.`);
+            if (times === null) {
+                Logger.error(`Job ${job.attrs.name} was removed because it uses timeId that doesn't exist anymore.`);
                 await job.remove();
                 continue;
             }
         }
 
-        const availableSchedules = await schedules.find().exec();
+        const availableSubjectTimes = await subjectTimes.find().exec();
 
-        for (const schedule of availableSchedules) {
-            const jobName = `schedule ${schedule.scheduleId}`;
+        for (const time of availableSubjectTimes) {
+            const jobName = `schedule_time ${time.timeId}`;
 
             this.agenda.define(jobName, async (job, done) => {
-                let subject = (await schedule.populate('payload.subject').execPopulate()).payload.subject;
+                let schedule: ISchedules | Query<ISchedules, ISchedules> = schedules.findOne({
+                    subjectTime: time.timeId,
+                    subjectDay: moment().isoWeekday(),
+                    isEven: Time.isEvenWeek(moment()),
+                });
+                if ((await schedule.exec()) === null) return Logger.warn(`Schedule for job ${jobName} not found!`);
+                const payload = (await (await schedule.populate('payload.subject payload.replacement')).execPopulate()).payload;
 
-                const replacement = (await schedule.populate('payload.replacement').execPopulate()).payload.replacement;
-                if (replacement !== null) {
-                    if (!moment(replacement.date, 'DD.MM.YYYY').isSame(moment(), 'days')) return;
+                schedule = await schedule.exec();
 
-                    Logger.info(`Found replacement for #${subject.subjectId} to #${replacement.replacingSubject}`);
-                    subject = (await replacement.populate('payload.subject').execPopulate()).payload.subject;
+                let subject = payload.subject;
+                if (payload.replacement !== null) {
+                    if (!moment(payload.replacement.date, 'DD.MM.YYYY').isSame(moment(), 'days')) return;
 
-                    if (replacement.teacher) subject.teacher = replacement.teacher;
-                    if (replacement.location) subject.location = replacement.location;
-                }
+                    Logger.info(`Found replacement for #${subject.subjectId} to #${payload.replacement.replacingSubject}`);
+                    subject = (await payload.replacement.populate('payload.subject').execPopulate()).payload.subject;
 
-                if (schedule.isEven !== Time.isEvenWeek(moment())) {
-                    return;
+                    if (payload.replacement.teacher) subject.teacher = payload.replacement.teacher;
+                    if (payload.replacement.location) subject.location = payload.replacement.location;
                 }
 
                 Logger.info(`Sending notification about subject #${subject.subjectId}...`);
@@ -78,10 +82,15 @@ export default class extends BasePlugin {
 
             await this.agenda.start();
 
-            const subjectTime = await subjectTimes.findOne({ timeId: schedule.subjectTime }).exec();
-            const hM = moment(subjectTime.timeStarts, 'HH:mm').subtract({ minute: 5 }).format('H:m').split(':');
+            const schedule = await schedules
+                .findOne({
+                    subjectTime: time.timeId,
+                    subjectDay: moment().isoWeekday(),
+                })
+                .exec();
+            const hM = moment(time.timeStarts, 'HH:mm').subtract({ minute: 5 }).format('H:m').split(':');
 
-            await this.agenda.every(`${hM[1]} ${hM[0]} * * ${schedule.subjectDay}`, jobName);
+            await this.agenda.every(`${hM[1]} ${hM[0]} * * *`, jobName);
         }
     }
 
@@ -93,7 +102,7 @@ export default class extends BasePlugin {
     async execute() {
         await this.createJobs();
         await Cleaner.cleanAll();
-        const jobs = await this.agenda.jobs({ name: /^schedule / });
+        const jobs = await this.agenda.jobs({ name: /^schedule_time / });
         Logger.info(`Registered ${jobs.length} schedules.`);
     }
 }
