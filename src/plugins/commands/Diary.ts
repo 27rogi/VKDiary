@@ -33,6 +33,14 @@ export default class extends BaseCommand {
         let weekDay = moment(dayOfMonth, 'DD').day();
         let month = moment().add(1, 'month').month();
 
+        if (dayOfMonth < 7 && !args[1]) {
+            if (moment().endOf('month').date() >= 28) {
+                month += 1;
+                weekDay = moment(`${Number(args[0])} ${month}`, 'DD MM').day();
+                await context.send(`Система определила, что вы пытаетесь посмотреть расписание на следующий месяц, если это не так, то укажите текущий самостоятельно используя /расп ${dayOfMonth} ${month - 1}`);
+            }
+        }
+
         if (args[1]) {
             if (Number(args[1]) <= 12 && Number(args[1]) > 0) {
                 month = Number(args[1]);
@@ -44,13 +52,6 @@ export default class extends BaseCommand {
 
         if (Number.isNaN(weekDay)) {
             return context.reply('В указанном месяце отсутствует число ' + args[0]);
-        }
-
-        if (dayOfMonth < 7 && !args[1]) {
-            if (moment().endOf('month').date() >= 28) {
-                month += 1;
-                await context.send(`Система определила, что вы пытаетесь посмотреть расписание на следующий месяц, если это не так, то укажите текущий самостоятельно используя /расп ${dayOfMonth} ${month - 1}`);
-            }
         }
 
         const isWeekEven = Time.isEvenWeek(moment(`${dayOfMonth} ${month}`, 'DD MM'));
