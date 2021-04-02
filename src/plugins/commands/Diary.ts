@@ -34,7 +34,7 @@ export default class extends BaseCommand {
         let month = moment().add(1, 'month').month();
 
         if (dayOfMonth < 7 && !args[1]) {
-            if (moment().endOf('month').date() >= 28) {
+            if (moment().date() >= 28) {
                 month += 1;
                 weekDay = moment(`${Number(args[0])} ${month}`, 'DD MM').day();
                 await context.send(`Система определила, что вы пытаетесь посмотреть расписание на следующий месяц, если это не так, то укажите текущий самостоятельно используя /расп ${dayOfMonth} ${month - 1}`);
