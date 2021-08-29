@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { dbDiary } from '../MongooseClient';
 
 export interface IChats extends mongoose.Document {
     chatId: number;
@@ -21,4 +22,4 @@ const chats = new mongoose.Schema({
     },
 });
 
-export default mongoose.model<IChats>('Chats', chats);
+export default dbDiary.model<IChats>('Chats', chats);

@@ -3,17 +3,13 @@ import chats from '../database/models/chats';
 import VKClient from '../VKClient';
 import Logger from './Logger';
 
-const removedChatsCache: number[] = [];
-
 export default {
     async broadcastMessage(text: string) {
         const chatsToBroadcast = await chats
             .find({
-                botId: settings.global.groupId,
+                botId: settings.client.groupId,
             })
             .exec();
-
-        removedChatsCache.length = 0;
 
         for (const chat of chatsToBroadcast) {
             if (chat.doAnnounce) {
@@ -26,11 +22,7 @@ export default {
                     })
                     .catch(async (err) => {
                         if (err.code === 7) {
-                            if (!removedChatsCache.includes(chat.chatId)) {
-                                Logger.warn('Trying to send message in chat where bot was deleted, clearing info.');
-                                await chats.deleteOne({ chatId: chat.chatId }).exec();
-                                removedChatsCache.push(chat.chatId);
-                            }
+                            Logger.warn(`Trying to send message in chat #${chat.chatId} where bot was deleted.`);
                         } else Logger.error(err);
                     });
             }

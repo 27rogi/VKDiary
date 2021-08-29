@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import settings from '../../settings.json';
 
-export = mongoose.connect(settings.global.mongoUrl, {
+export const dbDiary = mongoose.createConnection(settings.server.mongoDiary, {
     dbName: 'vkdiary_db',
-    useNewUrlParser: true,
-    useUnifiedTopology: false,
-    reconnectTries: Number.MAX_VALUE,
 });
+
+export const dbMemor = dbDiary.useDb('memor_db')
+

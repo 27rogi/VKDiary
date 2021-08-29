@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { dbDiary } from '../MongooseClient';
 
 export interface IPermissions extends mongoose.Document {
     userId: string;
@@ -17,4 +18,4 @@ const permissions = new mongoose.Schema({
     },
 });
 
-export default mongoose.model<IPermissions>('Permissions', permissions);
+export default dbDiary.model<IPermissions>('Permissions', permissions);

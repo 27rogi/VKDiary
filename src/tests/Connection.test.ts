@@ -1,9 +1,8 @@
-import MongooseClient from '../core/database/MongooseClient';
-
+import { dbDiary } from './../core/database/MongooseClient';
 describe('(Connection): проверка работы БД', () => {
     test('подключение должно быть успешно установлено', async () => {
-        const Mongoose = await MongooseClient;
-        expect(Mongoose.connection.readyState).toBe(1);
-        await Mongoose.connection.close();
+        const Mongoose = await dbDiary;
+        expect(Mongoose.readyState).toBe(2);
+        await Mongoose.close();
     });
 });

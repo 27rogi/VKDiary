@@ -72,7 +72,7 @@ export default class extends BasePlugin {
         VKClient.updates.on('message_new', this.payloadMiddleware);
 
         Logger.info(`Loading commands from "/commands" folder...`);
-        const commandFiles = fs.readdirSync(__dirname + '/commands').filter((file) => file.endsWith('.js'));
+        const commandFiles = fs.readdirSync(__dirname + '/commands').filter((file) => file.endsWith(process.env.PRODUCTION ? '.js' : '.ts'));
 
         Logger.info(`Attempting to load ${commandFiles.length} commands...`);
         for (const commandFile of commandFiles) {

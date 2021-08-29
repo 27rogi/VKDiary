@@ -1,20 +1,25 @@
 import moment from 'moment';
 import { APIError } from 'vk-io';
-import MongooseClient from './core/database/MongooseClient';
+import { dbDiary, dbMemor } from './core/database/MongooseClient';
 import PluginLoader from './core/PluginLoader';
 import Logger from './core/utils/Logger';
 import VKClient from './core/VKClient';
 
-const pluginLoader = new PluginLoader(__dirname + '/plugins', '.js');
+const pluginLoader = new PluginLoader(__dirname + '/plugins', process.env.PRODUCTION ? '.js' : '.ts');
 
-Logger.info('Running and trying to connect to MongoDB');
-MongooseClient.then(() => {
-    Logger.info('Connected to MongoDB, loading plugins...');
-    moment.locale('ru');
-    pluginLoader.load();
-}).catch((err) => {
-    Logger.error(err);
-});
+Logger.info(`{ VKDiary Lite by Rogi27 }`);
+
+dbMemor.on('open', () => {
+    Logger.info('Connected to Memor Database, now connecting to Diary...');
+
+    dbDiary.on('open', () => {
+        Logger.info('Connected to Diary Database, now loading plugins...');
+
+        moment.locale('ru');
+    
+        pluginLoader.load();
+    })
+})
 
 VKClient.updates.use(async (context, next) => {
     try {
@@ -23,7 +28,7 @@ VKClient.updates.use(async (context, next) => {
         if (!context.is(['message'])) throw error;
 
         if (error instanceof APIError && error.code === 917) {
-            Logger.error(`I do not have access to the chat, please give it to me.`);
+            Logger.error(`I do not have access to the chat, please give it to me!`);
             return;
         }
 
@@ -34,6 +39,6 @@ VKClient.updates.use(async (context, next) => {
 VKClient.updates
     .start()
     .then(() => {
-        Logger.info('Starting to watch VK updates...');
+        Logger.info('Hooked to VK updates!');
     })
     .catch(Logger.error);
