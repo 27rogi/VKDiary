@@ -30,7 +30,7 @@ gulp.task('jest', function () {
 	}));
 });
 
-gulp.task('build', gulp.series('jest', 'clean', 'compile', 'copy'));
+gulp.task('build', gulp.series('clean', 'compile', 'copy'));
 
 gulp.task('start', (done) => {
     nodemon({

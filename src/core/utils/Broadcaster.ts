@@ -5,11 +5,9 @@ import Logger from './Logger';
 
 export default {
     async broadcastMessage(text: string) {
-        const chatsToBroadcast = await chats
-            .find({
-                botId: settings.client.groupId,
-            })
-            .exec();
+        const chatsToBroadcast = await chats.find({
+            botId: settings.client.groupId,
+        });
 
         for (const chat of chatsToBroadcast) {
             if (chat.doAnnounce) {

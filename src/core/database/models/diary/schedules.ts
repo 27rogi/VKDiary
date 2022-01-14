@@ -1,4 +1,4 @@
-import { dbMemor } from "../../MongooseClient";
+import { dbMemor } from '../../MongooseClient';
 import mongoose from 'mongoose';
 import toJSON from '../../plugins/toJSON';
 const increment = require('mongoose-sequence')(mongoose);
@@ -6,55 +6,90 @@ const increment = require('mongoose-sequence')(mongoose);
 export interface ISchedules extends mongoose.Document {
     [x: string]: any;
     scheduleId: number;
-    subjectId: number;
-    bellId: number;
-    weekDay: number;
-    isEvem: boolean;
-    homeworks?: {
-        [key: string]: any;
-    };
-    replacements?: {
-        [key: string]: any;
-    };
-    subject?: {
-        [key: string]: any;
-    };
-    bell?: {
+    weekDate: string;
+    days?: {
         [key: string]: any;
     };
 }
 
-const scheduleSchema = new mongoose.Schema(
-{
-    scheduleId: Number,
+const replacementSchema = new mongoose.Schema({
     subjectId: {
         type: Number,
         required: true,
-        trim: true,
     },
-    bellId: {
-        type: Number,
-        required: true,
-        trim: true,
+    teacher: {
+        type: String,
+        required: false,
     },
-    weekDay: {
-        type: Number,
-        min: 1,
-        max: 7,
-        required: true,
+    location: {
+        type: String,
+        required: false,
     },
-    isEven: {
-        type: Boolean,
-        required: true,
-    },
-},
+});
+
+const scheduleSubjectsSchema = new mongoose.Schema(
     {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-    timestamps: true,
+        subjectId: {
+            type: Number,
+            required: true,
+            trim: true,
+        },
+        bellId: {
+            type: Number,
+            required: true,
+            trim: true,
+        },
+        replacement: {
+            type: replacementSchema,
+            required: false,
+        },
+    },
+    {
+        toJSON: {
+            virtuals: true,
+        },
     }
 );
 
+const scheduleDaySchema = new mongoose.Schema({
+    subjects: [scheduleSubjectsSchema],
+});
+
+const scheduleDaysSchema = new mongoose.Schema({
+    1: {
+        type: scheduleDaySchema,
+    },
+    2: {
+        type: scheduleDaySchema,
+    },
+    3: {
+        type: scheduleDaySchema,
+    },
+    4: {
+        type: scheduleDaySchema,
+    },
+    5: {
+        type: scheduleDaySchema,
+    },
+    6: {
+        type: scheduleDaySchema,
+    },
+    7: {
+        type: scheduleDaySchema,
+    },
+});
+
+const scheduleSchema = new mongoose.Schema({
+    scheduleId: Number,
+    weekDate: {
+        type: String,
+        required: true,
+    },
+    days: {
+        type: scheduleDaysSchema,
+        required: true,
+    },
+});
 
 // use automatic incrementation for easier accessibility
 scheduleSchema.plugin(increment, { inc_field: 'scheduleId' });
